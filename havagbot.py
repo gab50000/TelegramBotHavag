@@ -10,7 +10,7 @@ from pyhessian.client import HessianProxy
 
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-                    level=logging.DEBUG)
+                    level=logging.INFO, filename="bot.log")
 logger = logging.getLogger(__name__)
 
 
@@ -46,11 +46,15 @@ def read_config(filename):
 
 def check_id(func):
     def new_func(self, bot, update):
-        if self.allowed_ids and update["message"]["chat"]["id"] in self.allowed_ids:
+        requesting_id = update.message.chat_id
+        if self.allowed_ids and requesting_id in self.allowed_ids:
             logger.debug("Found ID in ID_LIST")
             func(self, bot, update)
         else:
-            logger.warning("ID not in ID_LIST")
+            chat = update.message.chat
+            logger.warning("User {} {} with id {} not in id list".format(chat.first_name,
+                                                                         chat.last_name,
+                                                                         requesting_id))
     return new_func
 
 
@@ -106,6 +110,7 @@ class HavagBot:
         return "{tram:} -> {destination:} @ {time:} ({delta:} Min.)".format(**connection)
 
 
+    @check_id
     def start(self, bot, update):
         bot.sendMessage(chat_id=update.message.chat_id, text="Hello")
 
